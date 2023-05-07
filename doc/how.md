@@ -34,3 +34,11 @@ then export:
 ~~~
 gofmt -w -r 'pointFormatUncompressed -> PointFormatUncompressed' .
 ~~~
+
+Now we want to clean up `go.mod`. First remove:
+
+~~~
+cpu\cpu_test.go
+examples\examples.go
+tls_test.go
+~~~
