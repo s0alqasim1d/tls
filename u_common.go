@@ -121,34 +121,9 @@ func utlsMacSHA384(version uint16, key []byte) macFunction {
 	return tls10MAC{hmac.New(sha512.New384, key)}
 }
 
-var utlsSupportedCipherSuites []*cipherSuite
-
 var utlsIdToSpec map[ClientHelloID]ClientHelloSpec
 
 func init() {
-	utlsSupportedCipherSuites = append(cipherSuites, []*cipherSuite{
-		{OLD_TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256, 32, 0, 12, ecdheRSAKA,
-			suiteECDHE | suiteTLS12 | suiteDefaultOff, nil, nil, aeadChaCha20Poly1305},
-		{OLD_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256, 32, 0, 12, ecdheECDSAKA,
-			suiteECDHE | suiteECDSA | suiteTLS12 | suiteDefaultOff, nil, nil, aeadChaCha20Poly1305},
-	}...)
-
 	utlsIdToSpec = make(map[ClientHelloID]ClientHelloSpec)
 	initParrots()
-}
-
-// EnableWeakCiphers allows utls connections to continue in some cases, when weak cipher was chosen.
-// This provides better compatibility with servers on the web, but weakens security. Feel free
-// to use this option if you establish additional secure connection inside of utls connection.
-// This option does not change the shape of parrots (i.e. same ciphers will be offered either way).
-func EnableWeakCiphers() {
-	utlsSupportedCipherSuites = append(cipherSuites, []*cipherSuite{
-		{DISABLED_TLS_RSA_WITH_AES_256_CBC_SHA256, 32, 32, 16, rsaKA,
-			suiteTLS12 | suiteDefaultOff, cipherAES, macSHA256, nil},
-
-		{DISABLED_TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384, 32, 48, 16, ecdheECDSAKA,
-			suiteECDHE | suiteECDSA | suiteTLS12 | suiteDefaultOff | suiteSHA384, cipherAES, utlsMacSHA384, nil},
-		{DISABLED_TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384, 32, 48, 16, ecdheRSAKA,
-			suiteECDHE | suiteTLS12 | suiteDefaultOff | suiteSHA384, cipherAES, utlsMacSHA384, nil},
-	}...)
 }

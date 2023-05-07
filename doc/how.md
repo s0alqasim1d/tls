@@ -35,7 +35,7 @@ then export:
 gofmt -w -r 'pointFormatUncompressed -> PointFormatUncompressed' .
 ~~~
 
-commit:
+renegotiation and export extension fields:
 
 https://github.com/refraction-networking/utls/commit/1552a980
 
@@ -160,3 +160,85 @@ fix:
 -}
 -
 ~~~
+
+errors:
+
+~~~
+cipher_suites.go:79:99: undefined: aeadChaCha20Poly1305
+cipher_suites.go:80:116: undefined: aeadChaCha20Poly1305
+~~~
+
+fix:
+
+~~~diff
+-{TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305, 32, 0, 12, ecdheRSAKA, suiteECDHE | suiteTLS12, nil, nil, aeadChaCha20Poly1305},
+-{TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305, 32, 0, 12, ecdheECDSAKA, suiteECDHE | suiteECDSA | suiteTLS12, nil, nil, aeadChaCha20Poly1305},
+~~~
+
+error:
+
+~~~
+u_common.go:131:57: undefined: aeadChaCha20Poly1305
+u_common.go:133:70: undefined: aeadChaCha20Poly1305
+~~~
+
+fix:
+
+~~~diff
+@@ -124,2 +123,0 @@ func utlsMacSHA384(version uint16, key []byte) macFunction {
+-var utlsSupportedCipherSuites []*cipherSuite
+-
+@@ -129,7 +126,0 @@ func init() {
+-       utlsSupportedCipherSuites = append(cipherSuites, []*cipherSuite{
+-               {OLD_TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256, 32, 0, 12, ecdheRSAKA,
+-                       suiteECDHE | suiteTLS12 | suiteDefaultOff, nil, nil, aeadChaCha20Poly1305},
+-               {OLD_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256, 32, 0, 12, ecdheECDSAKA,
+-                       suiteECDHE | suiteECDSA | suiteTLS12 | suiteDefaultOff, nil, nil, aeadChaCha20Poly1305},
+-       }...)
+-
+~~~
+
+error:
+
+~~~
+u_common.go:136:2: undefined: utlsSupportedCipherSuites
+~~~
+
+fix:
+
+~~~diff
+@@ -130,16 +129,0 @@ func init() {
+-
+-// EnableWeakCiphers allows utls connections to continue in some cases, when weak cipher was chosen.
+-// This provides better compatibility with servers on the web, but weakens security. Feel free
+-// to use this option if you establish additional secure connection inside of utls connection.
+-// This option does not change the shape of parrots (i.e. same ciphers will be offered either way).
+-func EnableWeakCiphers() {
+-       utlsSupportedCipherSuites = append(cipherSuites, []*cipherSuite{
+-               {DISABLED_TLS_RSA_WITH_AES_256_CBC_SHA256, 32, 32, 16, rsaKA,
+-                       suiteTLS12 | suiteDefaultOff, cipherAES, macSHA256, nil},
+-
+-               {DISABLED_TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384, 32, 48, 16, ecdheECDSAKA,
+-                       suiteECDHE | suiteECDSA | suiteTLS12 | suiteDefaultOff | suiteSHA384, cipherAES, utlsMacSHA384, nil},
+-               {DISABLED_TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384, 32, 48, 16, ecdheRSAKA,
+-                       suiteECDHE | suiteTLS12 | suiteDefaultOff | suiteSHA384, cipherAES, utlsMacSHA384, nil},
+-       }...)
+-}
+~~~
+
+error:
+
+~~~
+cipher_suites.go:338:26: undefined: utlsSupportedCipherSuites
+~~~
+
+fix:
+
+~~~diff
+-for _, suite := range utlsSupportedCipherSuites { // [UTLS]
++for _, suite := range cipherSuites {
+~~~
+
+commit:
+
+https://github.com/golang/go/commit/4caa1276

@@ -76,8 +76,6 @@ type cipherSuite struct {
 var cipherSuites = []*cipherSuite{
 	// Ciphersuite order is chosen so that ECDHE comes before plain RSA and
 	// AEADs are the top preference.
-	{TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305, 32, 0, 12, ecdheRSAKA, suiteECDHE | suiteTLS12, nil, nil, aeadChaCha20Poly1305},
-	{TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305, 32, 0, 12, ecdheECDSAKA, suiteECDHE | suiteECDSA | suiteTLS12, nil, nil, aeadChaCha20Poly1305},
 	{TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, 16, 0, 4, ecdheRSAKA, suiteECDHE | suiteTLS12, nil, nil, aeadAESGCM},
 	{TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, 16, 0, 4, ecdheECDSAKA, suiteECDHE | suiteECDSA | suiteTLS12, nil, nil, aeadAESGCM},
 	{TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, 32, 0, 4, ecdheRSAKA, suiteECDHE | suiteTLS12 | suiteSHA384, nil, nil, aeadAESGCM},
@@ -228,17 +226,6 @@ func aeadAESGCM(key, fixedNonce []byte) cipher.AEAD {
 	return ret
 }
 
-func aeadChaCha20Poly1305(key, fixedNonce []byte) cipher.AEAD {
-	aead, err := chacha20poly1305.New(key)
-	if err != nil {
-		panic(err)
-	}
-
-	ret := &xorNonceAEAD{aead: aead}
-	copy(ret.nonceMask[:], fixedNonce)
-	return ret
-}
-
 // ssl30MAC implements the SSLv3 MAC function, as defined in
 // www.mozilla.org/projects/security/pki/nss/ssl/draft302.txt section 5.2.3.1
 type ssl30MAC struct {
@@ -348,7 +335,7 @@ func ecdheRSAKA(version uint16) keyAgreement {
 func mutualCipherSuite(have []uint16, want uint16) *cipherSuite {
 	for _, id := range have {
 		if id == want {
-			for _, suite := range utlsSupportedCipherSuites { // [UTLS]
+			for _, suite := range cipherSuites {
 				if suite.id == want {
 					return suite
 				}
