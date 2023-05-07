@@ -1,0 +1,19 @@
+language: go
+
+go:
+ - 1.8.x
+ - 1.9
+
+sudo: required
+dist: trusty
+
+install:
+  - go get -t ./...
+  - go get github.com/golang/lint/golint
+  # Install gometalinter
+  - go get github.com/alecthomas/gometalinter
+
+script:
+ - go test -race -v .
+ - gometalinter --install
+ - gometalinter --disable-all -E vet -E gofmt -E misspell -E ineffassign --tests .
