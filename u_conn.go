@@ -48,31 +48,13 @@ func UClient(conn net.Conn, config *Config, clientHelloID ClientHelloID) *UConn 
 // if you need to inspect/change contents after parroting/making default Golang ClientHello.
 // Otherwise, there is no need to call this function explicitly.
 func (uconn *UConn) BuildHandshakeState() error {
-	if uconn.clientHelloID == HelloGolang {
-		// use default Golang ClientHello.
-		hello, err := makeClientHello(uconn.config)
-		if uconn.HandshakeState.Session != nil {
-			// session is lost at makeClientHello(), let's reapply
-			uconn.SetSessionState(uconn.HandshakeState.Session)
-		}
-		if err != nil {
-			return err
-		}
-		uconn.HandshakeState.Hello = hello.getPublicPtr()
-	} else {
-		var err error
-		err = uconn.applyPresetByID(uconn.clientHelloID)
-		if err != nil {
-			return err
-		}
-		err = uconn.ApplyConfig()
-		if err != nil {
-			return err
-		}
-		err = uconn.MarshalClientHello()
-		if err != nil {
-			return err
-		}
+	err := uconn.ApplyConfig()
+	if err != nil {
+		return err
+	}
+	err = uconn.MarshalClientHello()
+	if err != nil {
+		return err
 	}
 	uconn.HandshakeStateBuilt = true
 	return nil

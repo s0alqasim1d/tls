@@ -111,7 +111,3 @@ var (
 
 // based on spec's GreaseStyle, GREASE_PLACEHOLDER may be replaced by another GREASE value
 const GREASE_PLACEHOLDER = 0x0a0a
-
-func init() {
-	initParrots()
-}
