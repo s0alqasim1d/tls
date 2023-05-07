@@ -6,8 +6,8 @@ package tls
 
 import (
 	"crypto"
+	"crypto/ecdh"
 	"crypto/ecdsa"
-	"crypto/elliptic"
 	"crypto/md5"
 	"crypto/rsa"
 	"crypto/sha1"
@@ -15,9 +15,6 @@ import (
 	"encoding/asn1"
 	"errors"
 	"io"
-	"math/big"
-
-	"golang.org/x/crypto/curve25519"
 )
 
 var errClientKeyExchange = errors.New("tls: invalid ClientKeyExchange message")
@@ -164,113 +161,40 @@ func pickTLS12HashForSignature(sigType uint8, clientList []SignatureScheme) (Sig
 	return 0, errors.New("tls: client doesn't support any common hash functions")
 }
 
-// ecdheParameters implements Diffie-Hellman with either NIST curves or X25519,
+// returns a PrivateKey that implements Diffie-Hellman
 // according to RFC 8446, Section 4.2.8.2.
-type ecdheParameters interface {
-	CurveID() CurveID
-	PublicKey() []byte
-	SharedKey(peerPublicKey []byte) []byte
-}
-
-func generateECDHEParameters(rand io.Reader, curveID CurveID) (ecdheParameters, error) {
-	if curveID == X25519 {
-		p := &x25519Parameters{}
-		if _, err := io.ReadFull(rand, p.privateKey[:]); err != nil {
-			return nil, err
-		}
-		curve25519.ScalarBaseMult(&p.publicKey, &p.privateKey)
-		return p, nil
-	}
-
+func generateECDHEKey(rand io.Reader, curveID CurveID) (*ecdh.PrivateKey, error) {
 	curve, ok := curveForCurveID(curveID)
 	if !ok {
 		return nil, errors.New("tls: internal error: unsupported curve")
 	}
 
-	p := &nistParameters{curveID: curveID}
-	var err error
-	p.privateKey, p.x, p.y, err = elliptic.GenerateKey(curve, rand)
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	return curve.GenerateKey(rand)
 }
 
-func curveForCurveID(id CurveID) (elliptic.Curve, bool) {
+func curveForCurveID(id CurveID) (ecdh.Curve, bool) {
 	switch id {
+	case X25519:
+		return ecdh.X25519(), true
 	case CurveP256:
-		return elliptic.P256(), true
+		return ecdh.P256(), true
 	case CurveP384:
-		return elliptic.P384(), true
+		return ecdh.P384(), true
 	case CurveP521:
-		return elliptic.P521(), true
+		return ecdh.P521(), true
 	default:
 		return nil, false
 	}
 }
 
-type nistParameters struct {
-	privateKey []byte
-	x, y       *big.Int // public key
-	curveID    CurveID
-}
-
-func (p *nistParameters) CurveID() CurveID {
-	return p.curveID
-}
-
-func (p *nistParameters) PublicKey() []byte {
-	curve, _ := curveForCurveID(p.curveID)
-	return elliptic.Marshal(curve, p.x, p.y)
-}
-
-func (p *nistParameters) SharedKey(peerPublicKey []byte) []byte {
-	curve, _ := curveForCurveID(p.curveID)
-	// Unmarshal also checks whether the given point is on the curve.
-	x, y := elliptic.Unmarshal(curve, peerPublicKey)
-	if x == nil {
-		return nil
-	}
-
-	xShared, _ := curve.ScalarMult(x, y, p.privateKey)
-	sharedKey := make([]byte, (curve.Params().BitSize+7)>>3)
-	xBytes := xShared.Bytes()
-	copy(sharedKey[len(sharedKey)-len(xBytes):], xBytes)
-
-	return sharedKey
-}
-
-type x25519Parameters struct {
-	privateKey [32]byte
-	publicKey  [32]byte
-}
-
-func (p *x25519Parameters) CurveID() CurveID {
-	return X25519
-}
-
-func (p *x25519Parameters) PublicKey() []byte {
-	return p.publicKey[:]
-}
-
-func (p *x25519Parameters) SharedKey(peerPublicKey []byte) []byte {
-	if len(peerPublicKey) != 32 {
-		return nil
-	}
-	var theirPublicKey, sharedKey [32]byte
-	copy(theirPublicKey[:], peerPublicKey)
-	curve25519.ScalarMult(&sharedKey, &p.privateKey, &theirPublicKey)
-	return sharedKey[:]
-}
-
 // ecdheRSAKeyAgreement implements a TLS key agreement where the server
 // generates an ephemeral EC public/private key pair and signs it. The
-// pre-master secret is then calculated using ECDH. The signature may
-// either be ECDSA or RSA.
+// pre-master secret is then calculated using ECDH. The signature may either be
+// ECDSA or RSA.
 type ecdheKeyAgreement struct {
 	version uint16
 	sigType uint8
-	params  ecdheParameters
+	key     *ecdh.PrivateKey
 
 	// ckx and preMasterSecret are generated in processServerKeyExchange
 	// and returned in generateClientKeyExchange.
@@ -296,14 +220,14 @@ NextCandidate:
 		return nil, errors.New("tls: no supported elliptic curves offered")
 	}
 
-	params, err := generateECDHEParameters(config.rand(), curveID)
+	key, err := generateECDHEKey(config.rand(), curveID)
 	if err != nil {
 		return nil, err
 	}
-	ka.params = params
+	ka.key = key
 
 	// See RFC 4492, Section 5.4.
-	ecdhePublic := params.PublicKey()
+	ecdhePublic := key.PublicKey().Bytes()
 	serverECDHParams := make([]byte, 1+2+1+len(ecdhePublic))
 	serverECDHParams[0] = 3 // named curve
 	serverECDHParams[1] = byte(curveID >> 8)
@@ -375,8 +299,12 @@ func (ka *ecdheKeyAgreement) processClientKeyExchange(config *Config, cert *Cert
 		return nil, errClientKeyExchange
 	}
 
-	preMasterSecret := ka.params.SharedKey(ckx.ciphertext[1:])
-	if preMasterSecret == nil {
+	peerKey, err := ka.key.Curve().NewPublicKey(ckx.ciphertext[1:])
+	if err != nil {
+		return nil, errClientKeyExchange
+	}
+	preMasterSecret, err := ka.key.ECDH(peerKey)
+	if err != nil {
 		return nil, errClientKeyExchange
 	}
 
@@ -404,18 +332,22 @@ func (ka *ecdheKeyAgreement) processServerKeyExchange(config *Config, clientHell
 		return errServerKeyExchange
 	}
 
-	params, err := generateECDHEParameters(config.rand(), curveID)
+	key, err := generateECDHEKey(config.rand(), curveID)
 	if err != nil {
 		return err
 	}
-	ka.params = params
+	ka.key = key
 
-	ka.preMasterSecret = params.SharedKey(publicKey)
-	if ka.preMasterSecret == nil {
+	peerKey, err := key.Curve().NewPublicKey(publicKey)
+	if err != nil {
+		return errServerKeyExchange
+	}
+	ka.preMasterSecret, err = key.ECDH(peerKey)
+	if err != nil {
 		return errServerKeyExchange
 	}
 
-	ourPublicKey := params.PublicKey()
+	ourPublicKey := key.PublicKey().Bytes()
 	ka.ckx = new(clientKeyExchangeMsg)
 	ka.ckx.ciphertext = make([]byte, 1+len(ourPublicKey))
 	ka.ckx.ciphertext[0] = byte(len(ourPublicKey))

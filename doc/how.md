@@ -242,3 +242,11 @@ fix:
 commit:
 
 https://github.com/golang/go/commit/4caa1276
+
+commit:
+
+https://github.com/golang/go/commit/d88d91e3
+
+commit:
+
+https://github.com/golang/go/commit/dafc9152
