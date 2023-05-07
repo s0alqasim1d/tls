@@ -31,32 +31,6 @@ type clientHelloMsg struct {
 	alpnProtocols                []string
 }
 
-func (m *clientHelloMsg) equal(i interface{}) bool {
-	m1, ok := i.(*clientHelloMsg)
-	if !ok {
-		return false
-	}
-
-	return bytes.Equal(m.raw, m1.raw) &&
-		m.vers == m1.vers &&
-		bytes.Equal(m.random, m1.random) &&
-		bytes.Equal(m.sessionId, m1.sessionId) &&
-		eqUint16s(m.cipherSuites, m1.cipherSuites) &&
-		bytes.Equal(m.compressionMethods, m1.compressionMethods) &&
-		m.nextProtoNeg == m1.nextProtoNeg &&
-		m.serverName == m1.serverName &&
-		m.ocspStapling == m1.ocspStapling &&
-		m.scts == m1.scts &&
-		eqCurveIDs(m.supportedCurves, m1.supportedCurves) &&
-		bytes.Equal(m.supportedPoints, m1.supportedPoints) &&
-		m.ticketSupported == m1.ticketSupported &&
-		bytes.Equal(m.sessionTicket, m1.sessionTicket) &&
-		eqSignatureAlgorithms(m.supportedSignatureAlgorithms, m1.supportedSignatureAlgorithms) &&
-		m.secureRenegotiationSupported == m1.secureRenegotiationSupported &&
-		bytes.Equal(m.secureRenegotiation, m1.secureRenegotiation) &&
-		eqStrings(m.alpnProtocols, m1.alpnProtocols)
-}
-
 func (m *clientHelloMsg) marshal() []byte {
 	if m.raw != nil {
 		return m.raw
@@ -522,37 +496,6 @@ type serverHelloMsg struct {
 	alpnProtocol                 string
 }
 
-func (m *serverHelloMsg) equal(i interface{}) bool {
-	m1, ok := i.(*serverHelloMsg)
-	if !ok {
-		return false
-	}
-
-	if len(m.scts) != len(m1.scts) {
-		return false
-	}
-	for i, sct := range m.scts {
-		if !bytes.Equal(sct, m1.scts[i]) {
-			return false
-		}
-	}
-
-	return bytes.Equal(m.raw, m1.raw) &&
-		m.vers == m1.vers &&
-		bytes.Equal(m.random, m1.random) &&
-		bytes.Equal(m.sessionId, m1.sessionId) &&
-		m.cipherSuite == m1.cipherSuite &&
-		m.compressionMethod == m1.compressionMethod &&
-		m.nextProtoNeg == m1.nextProtoNeg &&
-		eqStrings(m.nextProtos, m1.nextProtos) &&
-		m.ocspStapling == m1.ocspStapling &&
-		m.ems == m1.ems &&
-		m.ticketSupported == m1.ticketSupported &&
-		m.secureRenegotiationSupported == m1.secureRenegotiationSupported &&
-		bytes.Equal(m.secureRenegotiation, m1.secureRenegotiation) &&
-		m.alpnProtocol == m1.alpnProtocol
-}
-
 func (m *serverHelloMsg) marshal() []byte {
 	if m.raw != nil {
 		return m.raw
@@ -846,16 +789,6 @@ func (m *serverHelloMsg) unmarshal(data []byte) bool {
 type certificateMsg struct {
 	raw          []byte
 	certificates [][]byte
-}
-
-func (m *certificateMsg) equal(i interface{}) bool {
-	m1, ok := i.(*certificateMsg)
-	if !ok {
-		return false
-	}
-
-	return bytes.Equal(m.raw, m1.raw) &&
-		eqByteSlices(m.certificates, m1.certificates)
 }
 
 func (m *certificateMsg) marshal() (x []byte) {

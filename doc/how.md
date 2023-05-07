@@ -250,3 +250,34 @@ https://github.com/golang/go/commit/d88d91e3
 commit:
 
 https://github.com/golang/go/commit/dafc9152
+
+remove:
+
+~~~
+cipher_suites.go:181:6: type xorNonceAEAD is unused (U1000)
+cipher_suites.go:186:24: func (*xorNonceAEAD).NonceSize is unused (U1000)
+cipher_suites.go:187:24: func (*xorNonceAEAD).Overhead is unused (U1000)
+cipher_suites.go:188:24: func (*xorNonceAEAD).explicitNonceLen is unused (U1000)
+cipher_suites.go:190:24: func (*xorNonceAEAD).Seal is unused (U1000)
+cipher_suites.go:202:24: func (*xorNonceAEAD).Open is unused (U1000)
+handshake_messages.go:34:26: func (*clientHelloMsg).equal is unused (U1000)
+handshake_messages.go:525:26: func (*serverHelloMsg).equal is unused (U1000)
+handshake_messages.go:851:26: func (*certificateMsg).equal is unused (U1000)
+
+handshake_messages.go:938:32: func (*serverKeyExchangeMsg).equal is unused (U1000)
+handshake_messages.go:979:32: func (*certificateStatusMsg).equal is unused (U1000)
+handshake_messages.go:1041:30: func (*serverHelloDoneMsg).equal is unused (U1000)
+handshake_messages.go:1061:32: func (*clientKeyExchangeMsg).equal is unused (U1000)
+handshake_messages.go:1105:23: func (*finishedMsg).equal is unused (U1000)
+handshake_messages.go:1142:24: func (*nextProtoMsg).equal is unused (U1000)
+handshake_messages.go:1219:33: func (*certificateRequestMsg).equal is unused (U1000)
+handshake_messages.go:1369:32: func (*certificateVerifyMsg).equal is unused (U1000)
+handshake_messages.go:1449:31: func (*newSessionTicketMsg).equal is unused (U1000)
+handshake_messages.go:1514:6: func eqUint16s is unused (U1000)
+handshake_messages.go:1526:6: func eqCurveIDs is unused (U1000)
+handshake_messages.go:1538:6: func eqStrings is unused (U1000)
+handshake_messages.go:1550:6: func eqByteSlices is unused (U1000)
+handshake_messages.go:1562:6: func eqSignatureAlgorithms is unused (U1000)
+ticket.go:101:24: func (*sessionState).equal is unused (U1000)
+u_common.go:120:6: func utlsMacSHA384 is unused (U1000)
+~~~
