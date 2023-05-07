@@ -214,36 +214,25 @@ func (e *RenegotiationInfoExtension) writeToUConn(uc *UConn) error {
 }
 
 func (e *RenegotiationInfoExtension) Len() int {
-	switch e.renegotiation {
-	case RenegotiateOnceAsClient:
-		fallthrough
-	case RenegotiateFreelyAsClient:
-		return 5 + len(e.SecureRenegotiation)
-	case RenegotiateNever:
-	default:
-	}
-	return 0
+   return 5
 }
 
 func (e *RenegotiationInfoExtension) Read(b []byte) (int, error) {
 	if len(b) < e.Len() {
 		return 0, io.ErrShortBuffer
 	}
-	switch e.renegotiation {
-	case RenegotiateOnceAsClient:
-		fallthrough
-	case RenegotiateFreelyAsClient:
-		b[0] = byte(extensionRenegotiationInfo >> 8)
-		b[1] = byte(extensionRenegotiationInfo & 0xff)
-		b[2] = 0 // TODO: this is not what Chrome does :(
-		b[3] = byte(len(e.SecureRenegotiation) + 1)
-		b[4] = byte(len(e.SecureRenegotiation))
-		if len(e.SecureRenegotiation) != 0 {
-			copy(b[5:], e.SecureRenegotiation)
-		}
-	case RenegotiateNever:
-	default:
-	}
+
+	var extInnerBody []byte // inner body is empty
+	innerBodyLen := len(extInnerBody)
+	extBodyLen := innerBodyLen + 1
+
+	b[0] = byte(extensionRenegotiationInfo >> 8)
+	b[1] = byte(extensionRenegotiationInfo & 0xff)
+	b[2] = byte(extBodyLen >> 8)
+	b[3] = byte(extBodyLen)
+	b[4] = byte(innerBodyLen)
+	copy(b[5:], extInnerBody)
+
 	return e.Len(), io.EOF
 }
 
