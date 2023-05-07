@@ -868,16 +868,6 @@ type serverKeyExchangeMsg struct {
 	key []byte
 }
 
-func (m *serverKeyExchangeMsg) equal(i interface{}) bool {
-	m1, ok := i.(*serverKeyExchangeMsg)
-	if !ok {
-		return false
-	}
-
-	return bytes.Equal(m.raw, m1.raw) &&
-		bytes.Equal(m.key, m1.key)
-}
-
 func (m *serverKeyExchangeMsg) marshal() []byte {
 	if m.raw != nil {
 		return m.raw
@@ -907,17 +897,6 @@ type certificateStatusMsg struct {
 	raw        []byte
 	statusType uint8
 	response   []byte
-}
-
-func (m *certificateStatusMsg) equal(i interface{}) bool {
-	m1, ok := i.(*certificateStatusMsg)
-	if !ok {
-		return false
-	}
-
-	return bytes.Equal(m.raw, m1.raw) &&
-		m.statusType == m1.statusType &&
-		bytes.Equal(m.response, m1.response)
 }
 
 func (m *certificateStatusMsg) marshal() []byte {
@@ -971,11 +950,6 @@ func (m *certificateStatusMsg) unmarshal(data []byte) bool {
 
 type serverHelloDoneMsg struct{}
 
-func (m *serverHelloDoneMsg) equal(i interface{}) bool {
-	_, ok := i.(*serverHelloDoneMsg)
-	return ok
-}
-
 func (m *serverHelloDoneMsg) marshal() []byte {
 	x := make([]byte, 4)
 	x[0] = typeServerHelloDone
@@ -989,16 +963,6 @@ func (m *serverHelloDoneMsg) unmarshal(data []byte) bool {
 type clientKeyExchangeMsg struct {
 	raw        []byte
 	ciphertext []byte
-}
-
-func (m *clientKeyExchangeMsg) equal(i interface{}) bool {
-	m1, ok := i.(*clientKeyExchangeMsg)
-	if !ok {
-		return false
-	}
-
-	return bytes.Equal(m.raw, m1.raw) &&
-		bytes.Equal(m.ciphertext, m1.ciphertext)
 }
 
 func (m *clientKeyExchangeMsg) marshal() []byte {
@@ -1035,16 +999,6 @@ type finishedMsg struct {
 	verifyData []byte
 }
 
-func (m *finishedMsg) equal(i interface{}) bool {
-	m1, ok := i.(*finishedMsg)
-	if !ok {
-		return false
-	}
-
-	return bytes.Equal(m.raw, m1.raw) &&
-		bytes.Equal(m.verifyData, m1.verifyData)
-}
-
 func (m *finishedMsg) marshal() (x []byte) {
 	if m.raw != nil {
 		return m.raw
@@ -1070,16 +1024,6 @@ func (m *finishedMsg) unmarshal(data []byte) bool {
 type nextProtoMsg struct {
 	raw   []byte
 	proto string
-}
-
-func (m *nextProtoMsg) equal(i interface{}) bool {
-	m1, ok := i.(*nextProtoMsg)
-	if !ok {
-		return false
-	}
-
-	return bytes.Equal(m.raw, m1.raw) &&
-		m.proto == m1.proto
 }
 
 func (m *nextProtoMsg) marshal() []byte {
@@ -1147,18 +1091,6 @@ type certificateRequestMsg struct {
 	certificateTypes             []byte
 	supportedSignatureAlgorithms []SignatureScheme
 	certificateAuthorities       [][]byte
-}
-
-func (m *certificateRequestMsg) equal(i interface{}) bool {
-	m1, ok := i.(*certificateRequestMsg)
-	if !ok {
-		return false
-	}
-
-	return bytes.Equal(m.raw, m1.raw) &&
-		bytes.Equal(m.certificateTypes, m1.certificateTypes) &&
-		eqByteSlices(m.certificateAuthorities, m1.certificateAuthorities) &&
-		eqSignatureAlgorithms(m.supportedSignatureAlgorithms, m1.supportedSignatureAlgorithms)
 }
 
 func (m *certificateRequestMsg) marshal() (x []byte) {
@@ -1299,18 +1231,6 @@ type certificateVerifyMsg struct {
 	signature           []byte
 }
 
-func (m *certificateVerifyMsg) equal(i interface{}) bool {
-	m1, ok := i.(*certificateVerifyMsg)
-	if !ok {
-		return false
-	}
-
-	return bytes.Equal(m.raw, m1.raw) &&
-		m.hasSignatureAndHash == m1.hasSignatureAndHash &&
-		m.signatureAlgorithm == m1.signatureAlgorithm &&
-		bytes.Equal(m.signature, m1.signature)
-}
-
 func (m *certificateVerifyMsg) marshal() (x []byte) {
 	if m.raw != nil {
 		return m.raw
@@ -1377,16 +1297,6 @@ func (m *certificateVerifyMsg) unmarshal(data []byte) bool {
 type newSessionTicketMsg struct {
 	raw    []byte
 	ticket []byte
-}
-
-func (m *newSessionTicketMsg) equal(i interface{}) bool {
-	m1, ok := i.(*newSessionTicketMsg)
-	if !ok {
-		return false
-	}
-
-	return bytes.Equal(m.raw, m1.raw) &&
-		bytes.Equal(m.ticket, m1.ticket)
 }
 
 func (m *newSessionTicketMsg) marshal() (x []byte) {
