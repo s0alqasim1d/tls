@@ -35,14 +35,6 @@ then export:
 gofmt -w -r 'pointFormatUncompressed -> PointFormatUncompressed' .
 ~~~
 
-Now we want to clean up `go.mod`. First remove:
-
-~~~
-cpu\cpu_test.go
-examples\examples.go
-tls_test.go
-~~~
-
 commit:
 
 https://github.com/refraction-networking/utls/commit/1552a980
@@ -56,9 +48,11 @@ CONTRIBUTORS_GUIDE.md
 cpu
 example_test.go
 generate_cert.go
-
 handshake_messages_test.go
+
+examples
 handshake_test.go
 prf_test.go
 testenv
+tls_test.go
 ~~~
