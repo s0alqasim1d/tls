@@ -55,7 +55,7 @@ func makeClientHello(config *Config) (*clientHelloMsg, error) {
 		scts:                         true,
 		serverName:                   hostnameInSNI(config.ServerName),
 		supportedCurves:              config.curvePreferences(),
-		supportedPoints:              []uint8{pointFormatUncompressed},
+		supportedPoints:              []uint8{PointFormatUncompressed},
 		nextProtoNeg:                 len(config.NextProtos) > 0,
 		secureRenegotiationSupported: true,
 		alpnProtocols:                config.NextProtos,

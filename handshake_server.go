@@ -158,7 +158,7 @@ Curves:
 
 	supportedPointFormat := false
 	for _, pointFormat := range hs.clientHello.supportedPoints {
-		if pointFormat == pointFormatUncompressed {
+		if pointFormat == PointFormatUncompressed {
 			supportedPointFormat = true
 			break
 		}

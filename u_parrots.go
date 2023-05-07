@@ -7,13 +7,13 @@ package tls
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/binary"
 	"errors"
 	"io"
 	"math/big"
 	"sort"
 	"strconv"
 	"time"
-	"encoding/binary"
 )
 
 func initParrots() {
@@ -57,7 +57,7 @@ func initParrots() {
 			&SCTExtension{},
 			&ALPNExtension{AlpnProtocols: []string{"h2", "http/1.1"}},
 			&FakeChannelIDExtension{},
-			&SupportedPointsExtension{SupportedPoints: []byte{pointFormatUncompressed}},
+			&SupportedPointsExtension{SupportedPoints: []byte{PointFormatUncompressed}},
 			&SupportedCurvesExtension{[]CurveID{CurveID(GREASE_PLACEHOLDER),
 				X25519, CurveP256, CurveP384}},
 			&FakeGREASEExtension{},
@@ -91,7 +91,7 @@ func initParrots() {
 			&UtlsExtendedMasterSecretExtension{},
 			&RenegotiationInfoExtension{renegotiation: RenegotiateOnceAsClient},
 			&SupportedCurvesExtension{[]CurveID{X25519, CurveP256, CurveP384, CurveP521}},
-			&SupportedPointsExtension{SupportedPoints: []byte{pointFormatUncompressed}},
+			&SupportedPointsExtension{SupportedPoints: []byte{PointFormatUncompressed}},
 			&SessionTicketExtension{},
 			&ALPNExtension{AlpnProtocols: []string{"h2", "http/1.1"}},
 			&StatusRequestExtension{},
@@ -187,10 +187,10 @@ func (uconn *UConn) ApplyPreset(p *ClientHelloSpec) error {
 		return errors.New("tls: short read from Rand: " + err.Error())
 	}
 	for i := range uconn.greaseSeed {
-		uconn.greaseSeed[i] = binary.LittleEndian.Uint16(grease_bytes[2*i:2*i +2])
+		uconn.greaseSeed[i] = binary.LittleEndian.Uint16(grease_bytes[2*i : 2*i+2])
 	}
-	if (uconn.greaseSeed[ssl_grease_extension1] == uconn.greaseSeed[ssl_grease_extension2]) {
-		uconn.greaseSeed[ssl_grease_extension2] ^= 0x1010;
+	if uconn.greaseSeed[ssl_grease_extension1] == uconn.greaseSeed[ssl_grease_extension2] {
+		uconn.greaseSeed[ssl_grease_extension2] ^= 0x1010
 	}
 
 	hello.CipherSuites = p.CipherSuites
@@ -285,7 +285,7 @@ func (uconn *UConn) generateRandomizedSpec(WithALPN bool) (ClientHelloSpec, erro
 
 	status := StatusRequestExtension{}
 	sct := SCTExtension{}
-	points := SupportedPointsExtension{SupportedPoints: []byte{pointFormatUncompressed}}
+	points := SupportedPointsExtension{SupportedPoints: []byte{PointFormatUncompressed}}
 
 	curveIDs := []CurveID{}
 	if tossBiasedCoin(0.7) {
