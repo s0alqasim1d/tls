@@ -214,7 +214,7 @@ func (e *RenegotiationInfoExtension) writeToUConn(uc *UConn) error {
 }
 
 func (e *RenegotiationInfoExtension) Len() int {
-   return 5
+	return 5
 }
 
 func (e *RenegotiationInfoExtension) Read(b []byte) (int, error) {
