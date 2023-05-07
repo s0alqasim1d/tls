@@ -596,6 +596,9 @@ Again:
 		// if err == io.EOF {
 		// 	err = io.ErrUnexpectedEOF
 		// }
+
+		//lint:ignore SA1019 reason
+		// github.com/golang/go/blob/go1.20.4/src/crypto/tls/conn.go#L624
 		if e, ok := err.(net.Error); !ok || !e.Temporary() {
 			c.in.setErrorLocked(err)
 		}
@@ -638,6 +641,8 @@ Again:
 		if err == io.EOF {
 			err = io.ErrUnexpectedEOF
 		}
+		//lint:ignore SA1019 reason
+		// github.com/golang/go/blob/go1.20.4/src/crypto/tls/conn.go#L663
 		if e, ok := err.(net.Error); !ok || !e.Temporary() {
 			c.in.setErrorLocked(err)
 		}

@@ -112,9 +112,6 @@ var (
 // based on spec's GreaseStyle, GREASE_PLACEHOLDER may be replaced by another GREASE value
 const GREASE_PLACEHOLDER = 0x0a0a
 
-var utlsIdToSpec map[ClientHelloID]ClientHelloSpec
-
 func init() {
-	utlsIdToSpec = make(map[ClientHelloID]ClientHelloSpec)
 	initParrots()
 }

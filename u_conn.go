@@ -397,7 +397,7 @@ func (uconn *UConn) MarshalClientHello() error {
 			if paddingExt == nil {
 				paddingExt = pe
 			} else {
-				return errors.New("Multiple padding extensions!")
+				return errors.New("multiple padding extensions")
 			}
 		}
 	}
@@ -465,5 +465,5 @@ func (uconn *UConn) GetOutKeystream(length int) ([]byte, error) {
 		// AEAD.Seal() does not mutate internal state, other ciphers might
 		return outCipher.Seal(nil, uconn.out.seq[:], zeros, nil), nil
 	}
-	return nil, errors.New("Could not convert OutCipher to cipher.AEAD")
+	return nil, errors.New("could not convert OutCipher to cipher.AEAD")
 }

@@ -261,7 +261,8 @@ func (m *clientHelloMsg) marshal() []byte {
 		z[0] = byte(extensionSCT >> 8)
 		z[1] = byte(extensionSCT)
 		// zero uint16 for the zero-length extension_data
-		z = z[4:]
+		// since this is the last field, the pointer can stay
+		// z = z[4:]
 	}
 
 	m.raw = x
@@ -1071,11 +1072,8 @@ func (m *nextProtoMsg) unmarshal(data []byte) bool {
 	}
 	paddingLen := int(data[0])
 	data = data[1:]
-	if len(data) != paddingLen {
-		return false
-	}
 
-	return true
+	return len(data) == paddingLen
 }
 
 type certificateRequestMsg struct {

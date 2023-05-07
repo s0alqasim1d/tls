@@ -428,6 +428,8 @@ func (hs *serverHandshakeState) doFullHandshake() error {
 		// we can send them down, so that the client can choose
 		// an appropriate certificate to give to us.
 		if c.config.ClientCAs != nil {
+			//lint:ignore SA1019 reason
+			// github.com/golang/go/blob/go1.20.4/src/crypto/tls/handshake_server.go#L560
 			certReq.certificateAuthorities = c.config.ClientCAs.Subjects()
 		}
 		hs.finishedHash.Write(certReq.marshal())
