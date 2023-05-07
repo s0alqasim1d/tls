@@ -272,7 +272,6 @@ handshake_messages.go:1142:24: func (*nextProtoMsg).equal is unused (U1000)
 handshake_messages.go:1219:33: func (*certificateRequestMsg).equal is unused (U1000)
 handshake_messages.go:1369:32: func (*certificateVerifyMsg).equal is unused (U1000)
 handshake_messages.go:1449:31: func (*newSessionTicketMsg).equal is unused (U1000)
-
 handshake_messages.go:1514:6: func eqUint16s is unused (U1000)
 handshake_messages.go:1526:6: func eqCurveIDs is unused (U1000)
 handshake_messages.go:1538:6: func eqStrings is unused (U1000)

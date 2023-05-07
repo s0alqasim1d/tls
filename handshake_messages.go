@@ -4,10 +4,7 @@
 
 package tls
 
-import (
-	"bytes"
-	"strings"
-)
+import "strings"
 
 type clientHelloMsg struct {
 	raw                          []byte
@@ -1352,64 +1349,4 @@ func (*helloRequestMsg) marshal() []byte {
 
 func (*helloRequestMsg) unmarshal(data []byte) bool {
 	return len(data) == 4
-}
-
-func eqUint16s(x, y []uint16) bool {
-	if len(x) != len(y) {
-		return false
-	}
-	for i, v := range x {
-		if y[i] != v {
-			return false
-		}
-	}
-	return true
-}
-
-func eqCurveIDs(x, y []CurveID) bool {
-	if len(x) != len(y) {
-		return false
-	}
-	for i, v := range x {
-		if y[i] != v {
-			return false
-		}
-	}
-	return true
-}
-
-func eqStrings(x, y []string) bool {
-	if len(x) != len(y) {
-		return false
-	}
-	for i, v := range x {
-		if y[i] != v {
-			return false
-		}
-	}
-	return true
-}
-
-func eqByteSlices(x, y [][]byte) bool {
-	if len(x) != len(y) {
-		return false
-	}
-	for i, v := range x {
-		if !bytes.Equal(v, y[i]) {
-			return false
-		}
-	}
-	return true
-}
-
-func eqSignatureAlgorithms(x, y []SignatureScheme) bool {
-	if len(x) != len(y) {
-		return false
-	}
-	for i, v := range x {
-		if v != y[i] {
-			return false
-		}
-	}
-	return true
 }

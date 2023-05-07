@@ -4,11 +4,7 @@
 
 package tls
 
-import (
-	"crypto/hmac"
-	"crypto/sha512"
-	"fmt"
-)
+import "fmt"
 
 // Naming convention:
 // Unsupported things are prefixed with "Fake"
@@ -115,11 +111,6 @@ var (
 
 // based on spec's GreaseStyle, GREASE_PLACEHOLDER may be replaced by another GREASE value
 const GREASE_PLACEHOLDER = 0x0a0a
-
-// utlsMacSHA384 returns a SHA-384.
-func utlsMacSHA384(version uint16, key []byte) macFunction {
-	return tls10MAC{hmac.New(sha512.New384, key)}
-}
 
 var utlsIdToSpec map[ClientHelloID]ClientHelloSpec
 
