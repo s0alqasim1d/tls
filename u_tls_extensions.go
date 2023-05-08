@@ -4,9 +4,7 @@
 
 package tls
 
-import (
-	"io"
-)
+import "io"
 
 type TLSExtension interface {
 	writeToUConn(*UConn) error
@@ -14,7 +12,8 @@ type TLSExtension interface {
 	Len() int // includes header
 
 	// Read reads up to len(p) bytes into p.
-	// It returns the number of bytes read (0 <= n <= len(p)) and any error encountered.
+	// It returns the number of bytes read (0 <= n <= len(p)) and any error
+	// encountered.
 	Read(p []byte) (n int, err error) // implements io.Reader
 }
 
