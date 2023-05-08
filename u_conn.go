@@ -19,8 +19,7 @@ import (
 type UConn struct {
 	*Conn
 
-	Extensions    []TLSExtension
-	clientHelloID ClientHelloID
+	Extensions []TLSExtension
 
 	HandshakeState ClientHandshakeState
 
@@ -32,15 +31,15 @@ type UConn struct {
 	greaseSeed [ssl_grease_last_index]uint16
 }
 
-// UClient returns a new uTLS client, with behavior depending on clientHelloID.
-// Config CAN be nil, but make sure to eventually specify ServerName.
-func UClient(conn net.Conn, config *Config, clientHelloID ClientHelloID) *UConn {
+// UClient returns a new uTLS client. Config CAN be nil, but make sure to
+// eventually specify ServerName.
+func UClient(conn net.Conn, config *Config) *UConn {
 	if config == nil {
 		config = &Config{}
 	}
 	tlsConn := Conn{conn: conn, config: config, isClient: true}
 	handshakeState := ClientHandshakeState{C: &tlsConn, Hello: &ClientHelloMsg{}}
-	uconn := UConn{Conn: &tlsConn, clientHelloID: clientHelloID, HandshakeState: handshakeState}
+	uconn := UConn{Conn: &tlsConn, HandshakeState: handshakeState}
 	return &uconn
 }
 

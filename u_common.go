@@ -7,7 +7,6 @@ package tls
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"strconv"
 )
@@ -132,34 +131,6 @@ const (
 var (
 	FakePKCS1WithSHA224 SignatureScheme = 0x0301
 	FakeECDSAWithSHA224 SignatureScheme = 0x0303
-
-	// fakeEd25519 = SignatureAndHash{0x08, 0x07}
-	// fakeEd448 = SignatureAndHash{0x08, 0x08}
-)
-
-type ClientHelloID struct {
-	Browser string
-	Version uint16
-	// TODO: consider adding OS?
-}
-
-func (p *ClientHelloID) Str() string {
-	return fmt.Sprintf("%s-%d", p.Browser, p.Version)
-}
-
-const (
-	helloGolang     = "Golang"
-	helloRandomized = "Randomized"
-	helloCustom     = "Custom"
-	helloFirefox    = "Firefox"
-	helloChrome     = "Chrome"
-	helloAndroid    = "Android"
-)
-
-const (
-	helloAutoVers = iota
-	helloRandomizedALPN
-	helloRandomizedNoALPN
 )
 
 type ClientHelloSpec struct {
@@ -175,31 +146,49 @@ type ClientHelloSpec struct {
 	// TLSFingerprintLink string // ?? link to tlsfingerprint.io for informational purposes
 }
 
-var (
-	// HelloGolang will use default "crypto/tls" handshake marshaling codepath, which WILL
-	// overwrite your changes to Hello(Config, Session are fine).
-	// You might want to call BuildHandshakeState() before applying any changes.
-	// UConn.Extensions will be completely ignored.
-	HelloGolang = ClientHelloID{helloGolang, helloAutoVers}
-
-	// HelloCustom will prepare ClientHello with empty uconn.Extensions so you can fill it with
-	// TLSExtensions manually or use ApplyPreset function
-	HelloCustom = ClientHelloID{helloCustom, helloAutoVers}
-
-	// HelloRandomized* randomly adds/reorders extensions, ciphersuites, etc.
-	HelloRandomized       = ClientHelloID{helloRandomized, helloAutoVers}
-	HelloRandomizedALPN   = ClientHelloID{helloRandomized, helloRandomizedALPN}
-	HelloRandomizedNoALPN = ClientHelloID{helloRandomized, helloRandomizedNoALPN}
-
-	// The rest will will parrot given browser.
-	HelloFirefox_Auto = HelloFirefox_56
-	HelloFirefox_55   = ClientHelloID{helloFirefox, 55}
-	HelloFirefox_56   = ClientHelloID{helloFirefox, 56}
-
-	HelloChrome_Auto = HelloChrome_62
-	HelloChrome_58   = ClientHelloID{helloChrome, 58}
-	HelloChrome_62   = ClientHelloID{helloChrome, 62}
-)
+var Android_API_26 = ClientHelloSpec{
+	CipherSuites: []uint16{
+		TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+		TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+		TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+		TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+		TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+		TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+		TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+		TLS_RSA_WITH_AES_128_GCM_SHA256,
+		TLS_RSA_WITH_AES_256_GCM_SHA384,
+		TLS_RSA_WITH_AES_128_CBC_SHA,
+		TLS_RSA_WITH_AES_256_CBC_SHA,
+	},
+	Extensions: []TLSExtension{
+		&RenegotiationInfoExtension{},
+		&SNIExtension{},
+		&UtlsExtendedMasterSecretExtension{},
+		&SessionTicketExtension{},
+		&SignatureAlgorithmsExtension{
+			SupportedSignatureAlgorithms: []SignatureScheme{
+				ECDSAWithP256AndSHA256,
+			},
+		},
+		&StatusRequestExtension{},
+		&ALPNExtension{
+			AlpnProtocols: []string{"http/1.1"},
+		},
+		&SupportedPointsExtension{
+			SupportedPoints: []uint8{PointFormatUncompressed},
+		},
+		&SupportedCurvesExtension{
+			Curves: []CurveID{
+				X25519,
+				CurveP256,
+				CurveP384,
+			},
+		},
+	},
+}
 
 // based on spec's GreaseStyle, GREASE_PLACEHOLDER may be replaced by another GREASE value
 const GREASE_PLACEHOLDER = 0x0a0a
