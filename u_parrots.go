@@ -5,14 +5,10 @@
 package tls
 
 import (
-	"crypto/rand"
 	"encoding/binary"
 	"errors"
 	"io"
-	"math/big"
-	"sort"
 	"strconv"
-	"time"
 )
 
 // ApplyPreset should only be used in conjunction with HelloCustom to apply custom specs.
@@ -101,79 +97,6 @@ func (uconn *UConn) ApplyPreset(p *ClientHelloSpec) error {
 	return nil
 }
 
-func tossBiasedCoin(probability float32) bool {
-	// probability is expected to be in [0,1]
-	// this function never returns errors for ease of use
-	const precision = 0xffff
-	threshold := float32(precision) * probability
-	value, err := getRandInt(precision)
-	if err != nil {
-		// I doubt that this code will ever actually be used, as other functions are expected to complain
-		// about used source of entropy. Nonetheless, this is more than enough for given purpose
-		return ((time.Now().Unix() & 1) == 0)
-	}
-
-	if float32(value) <= threshold {
-		return true
-	} else {
-		return false
-	}
-}
-
-func removeRandomCiphers(s []uint16, maxRemovalProbability float32) []uint16 {
-	// removes elements in place
-	// probability to remove increases for further elements
-	// never remove first cipher
-	if len(s) <= 1 {
-		return s
-	}
-
-	// remove random elements
-	floatLen := float32(len(s))
-	sliceLen := len(s)
-	for i := 1; i < sliceLen; i++ {
-		if tossBiasedCoin(maxRemovalProbability * float32(i) / floatLen) {
-			s = append(s[:i], s[i+1:]...)
-			sliceLen--
-			i--
-		}
-	}
-	return s
-}
-
-func getRandInt(max int) (int, error) {
-	bigInt, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
-	return int(bigInt.Int64()), err
-}
-
-func getRandPerm(n int) ([]int, error) {
-	permArray := make([]int, n)
-	for i := 1; i < n; i++ {
-		j, err := getRandInt(i + 1)
-		if err != nil {
-			return permArray, err
-		}
-		permArray[i] = permArray[j]
-		permArray[j] = i
-	}
-	return permArray, nil
-}
-
-func shuffledCiphers() ([]uint16, error) {
-	ciphers := make(sortableCiphers, len(cipherSuites))
-	perm, err := getRandPerm(len(cipherSuites))
-	if err != nil {
-		return nil, err
-	}
-	for i, suite := range cipherSuites {
-		ciphers[i] = sortableCipher{suite: suite.id,
-			isObsolete: ((suite.flags & suiteTLS12) == 0),
-			randomTag:  perm[i]}
-	}
-	sort.Sort(ciphers)
-	return ciphers.GetCiphers(), nil
-}
-
 type sortableCipher struct {
 	isObsolete bool
 	randomTag  int
@@ -206,30 +129,4 @@ func (ciphers sortableCiphers) GetCiphers() []uint16 {
 		cipherIDs[i] = ciphers[i].suite
 	}
 	return cipherIDs
-}
-
-// so much for generics
-func shuffleTLSExtensions(s []TLSExtension) error {
-	// shuffles array in place
-	perm, err := getRandPerm(len(s))
-	if err != nil {
-		return err
-	}
-	for i := range s {
-		s[i], s[perm[i]] = s[perm[i]], s[i]
-	}
-	return nil
-}
-
-// so much for generics
-func shuffleSignatures(s []SignatureScheme) error {
-	// shuffles array in place
-	perm, err := getRandPerm(len(s))
-	if err != nil {
-		return err
-	}
-	for i := range s {
-		s[i], s[perm[i]] = s[perm[i]], s[i]
-	}
-	return nil
 }
