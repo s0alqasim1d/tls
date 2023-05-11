@@ -1,52 +1,75 @@
 package tls
 
 import (
-	"bufio"
-	"fmt"
-	"net"
-	"net/http"
-	"net/url"
-	"strings"
-	"testing"
+   "bufio"
+   "encoding/json"
+   "fmt"
+   "net"
+   "net/http"
+   "net/url"
+   "os"
+   "strings"
+   "testing"
 )
 
+func credential(name string) (map[string]string, error) {
+   home, err := os.UserHomeDir()
+   if err != nil {
+      return nil, err
+   }
+   file, err := os.Open(home + name)
+   if err != nil {
+      return nil, err
+   }
+   defer file.Close()
+   var cred map[string]string
+   if err := json.NewDecoder(file).Decode(&cred); err != nil {
+      return nil, err
+   }
+   return cred, nil
+}
+
 func Test_TLS(t *testing.T) {
-	conf := Config{ServerName: "android.googleapis.com"}
-	dial_conn, err := net.Dial("tcp", "android.googleapis.com:443")
-	if err != nil {
-		t.Fatal(err)
-	}
-	tls_conn := UClient(dial_conn, &conf)
-	defer tls_conn.Close()
-	if err := tls_conn.ApplyPreset(&Android_API_26); err != nil {
-		t.Fatal(err)
-	}
-	body := url.Values{
-		"Email":              {email},
-		"Passwd":             {passwd},
-		"client_sig":         {""},
-		"droidguard_results": {"-"},
-	}.Encode()
-	req, err := http.NewRequest(
-		"POST", "https://android.googleapis.com/auth",
-		strings.NewReader(body),
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Proto = "HTTP/1.1"
-	req.ProtoMajor = 1
-	req.ProtoMinor = 1
-	if err := req.Write(tls_conn); err != nil {
-		t.Fatal(err)
-	}
-	res, err := http.ReadResponse(bufio.NewReader(tls_conn), req)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := res.Body.Close(); err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println(res.Status)
+   cred, err := credential("/Documents/gmail.json")
+   if err != nil {
+      t.Fatal(err)
+   }
+   conf := Config{ServerName: "android.googleapis.com"}
+   dial_conn, err := net.Dial("tcp", "android.googleapis.com:443")
+   if err != nil {
+      t.Fatal(err)
+   }
+   tls_conn := UClient(dial_conn, &conf)
+   defer tls_conn.Close()
+   if err := tls_conn.ApplyPreset(&Android_API_26); err != nil {
+      t.Fatal(err)
+   }
+   body := url.Values{
+      "Email":              {cred["username"]},
+      "Passwd":             {cred["password"]},
+      "client_sig":         {""},
+      "droidguard_results": {"-"},
+   }.Encode()
+   req, err := http.NewRequest(
+      "POST", "https://android.googleapis.com/auth",
+      strings.NewReader(body),
+   )
+   if err != nil {
+      t.Fatal(err)
+   }
+   req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+   req.Proto = "HTTP/1.1"
+   req.ProtoMajor = 1
+   req.ProtoMinor = 1
+   if err := req.Write(tls_conn); err != nil {
+      t.Fatal(err)
+   }
+   res, err := http.ReadResponse(bufio.NewReader(tls_conn), req)
+   if err != nil {
+      t.Fatal(err)
+   }
+   if err := res.Body.Close(); err != nil {
+      t.Fatal(err)
+   }
+   fmt.Println(res.Status)
 }
