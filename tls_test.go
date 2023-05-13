@@ -2,7 +2,6 @@ package tls
 
 import (
    "bufio"
-   "encoding/json"
    "fmt"
    "net"
    "net/http"
@@ -25,7 +24,7 @@ func Test_TLS(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   account, err := sign_in(home + "/Documents/gmail.json")
+   account, err := sign_in(home + "/Documents/gmail.txt")
    if err != nil {
       t.Fatal(err)
    }
