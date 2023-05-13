@@ -12,16 +12,12 @@ import (
    "testing"
 )
 
-func credential(name string) (map[string]string, error) {
+func sign_in(name string) ([]string, error) {
    data, err := os.ReadFile(name)
    if err != nil {
       return nil, err
    }
-   var cred map[string]string
-   if err := json.Unmarshal(data, &cred); err != nil {
-      return nil, err
-   }
-   return cred, nil
+   return strings.Split(string(data), "\n"), nil
 }
 
 func Test_TLS(t *testing.T) {
@@ -29,7 +25,7 @@ func Test_TLS(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   cred, err := credential(home + "/Documents/gmail.json")
+   account, err := sign_in(home + "/Documents/gmail.json")
    if err != nil {
       t.Fatal(err)
    }
@@ -44,8 +40,8 @@ func Test_TLS(t *testing.T) {
       t.Fatal(err)
    }
    body := url.Values{
-      "Email":              {cred["username"]},
-      "Passwd":             {cred["password"]},
+      "Email":              {account[0]},
+      "Passwd":             {account[1]},
       "client_sig":         {""},
       "droidguard_results": {"-"},
    }.Encode()
